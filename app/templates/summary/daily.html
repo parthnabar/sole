@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Daily Summary{% endblock %}
+
+{% block header %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-header-icon">✨</div>
+        <div class="page-header-text">
+            <h2>Daily Summary</h2>
+            <p>AI-generated overview of your day</p>
+        </div>
+    </div>
+    <div class="page-header-right">
+        <form method="POST" action="{{ url_for('summary.generate_summary') }}"
+              hx-post="{{ url_for('summary.generate_summary') }}"
+              hx-target="#summary-area"
+              hx-indicator="#gen-spinner"
+              style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-primary">
+                ✨ Generate Summary
+                <span id="gen-spinner" class="htmx-indicator"><span class="spinner"></span></span>
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    <div id="summary-area">
+        {% if summary %}
+            {% include 'summary/_summary_content.html' %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">✨</div>
+                <h3>No summaries yet</h3>
+                <p>Generate your first daily summary to get an overview</p>
+                <form method="POST" action="{{ url_for('summary.generate_summary') }}"
+                      hx-post="{{ url_for('summary.generate_summary') }}"
+                      hx-target="#summary-area"
+                      hx-indicator="#gen-spinner2">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        ✨ Generate First Summary
+                        <span id="gen-spinner2" class="htmx-indicator"><span class="spinner"></span></span>
+                    </button>
+                </form>
+            </div>
+        {% endif %}
+    </div>
+
+    {% if past_summaries %}
+    <div class="mt-6">
+        <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 12px;">Past Summaries</h3>
+        {% for s in past_summaries %}
+        <a href="{{ url_for('summary.view_summary', date_str=s.date.strftime('%Y-%m-%d')) }}"
+           class="summary-history-item" style="text-decoration:none">
+            <div class="summary-history-date">{{ s.date.strftime('%b %d, %Y') }}</div>
+            <div class="summary-history-preview">{{ s.content | truncate_words(100) }}</div>
+            <span class="stat-arrow">→</span>
+        </a>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

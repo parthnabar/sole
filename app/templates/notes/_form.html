@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ 'Edit Note' if note else 'New Note' }}{% endblock %}
+
+{% block header %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-header-icon">📄</div>
+        <div class="page-header-text">
+            <h2>{{ 'Edit Note' if note else 'New Note' }}</h2>
+            <p>{{ 'Update your note' if note else 'Capture a new thought' }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    <div class="card" style="max-width: 720px;">
+        <form method="POST"
+              action="{{ url_for('notes.update_note', id=note.id) if note else url_for('notes.create_note') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-group">
+                <label class="form-label">Title</label>
+                <input type="text" name="title" class="form-input"
+                       placeholder="Note title..."
+                       value="{{ note.title if note else '' }}" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Content <span class="text-muted text-sm">(Markdown supported)</span></label>
+                <textarea name="content" class="form-textarea" rows="12"
+                          placeholder="Write your note here... You can use **bold**, *italic*, lists, and more.">{{ note.content if note else '' }}</textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    {{ 'Save Changes' if note else 'Create Note' }}
+                </button>
+                {% if note %}
+                <a href="{{ url_for('notes.view_note', id=note.id) }}" class="btn btn-secondary">Cancel</a>
+                {% else %}
+                <a href="{{ url_for('notes.list_notes') }}" class="btn btn-secondary">Cancel</a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

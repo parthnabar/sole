@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block title %}Notes{% endblock %}
+
+{% block header %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-header-icon">📄</div>
+        <div class="page-header-text">
+            <h2>Notes</h2>
+            <p>Capture and organize your thoughts</p>
+        </div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-secondary" onclick="document.getElementById('scan-modal').style.display='flex'">
+            📷 Scan Handwritten
+        </button>
+        <a href="{{ url_for('notes.new_note') }}" class="btn btn-primary">+ New Note</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    <!-- Search -->
+    <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="search"
+               name="q"
+               placeholder="Search notes..."
+               value="{{ q }}"
+               hx-get="{{ url_for('notes.list_notes') }}"
+               hx-trigger="keyup changed delay:300ms"
+               hx-target="#notes-list"
+               hx-push-url="false">
+    </div>
+
+    <!-- Notes List -->
+    <div id="notes-list">
+        {% include 'notes/_list_items.html' %}
+    </div>
+</div>
+
+<!-- Scan Handwritten Note Modal -->
+<div id="scan-modal" class="modal-backdrop" style="display:none"
+     onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📷 Scan Handwritten Note</h3>
+            <button class="modal-close" onclick="document.getElementById('scan-modal').style.display='none'">&times;</button>
+        </div>
+        <p class="text-sm text-muted mb-4">Upload a photo of your handwritten note and AI will convert it to a digital note.</p>
+
+        <form method="POST" action="{{ url_for('notes.scan_handwritten') }}" enctype="multipart/form-data" id="scan-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="scan-upload-zone" id="scan-dropzone"
+                 onclick="document.getElementById('scan-file-input').click()">
+                <input type="file" name="image" id="scan-file-input"
+                       accept="image/png,image/jpeg,image/gif,image/webp"
+                       style="display:none"
+                       onchange="handleScanPreview(this)">
+                <div id="scan-placeholder">
+                    <div class="scan-upload-icon">📸</div>
+                    <h4>Drop your handwritten note here</h4>
+                    <p>or click to browse — PNG, JPG, GIF, WebP</p>
+                </div>
+                <div id="scan-preview" style="display:none">
+                    <img id="scan-preview-img" src="" alt="Preview">
+                    <p id="scan-preview-name" class="text-sm text-muted mt-2"></p>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary" id="scan-submit-btn" disabled>
+                    ✨ Extract & Create Note
+                </button>
+                <button type="button" class="btn btn-secondary"
+                        onclick="document.getElementById('scan-modal').style.display='none'">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function handleScanPreview(input) {
+    if (input.files && input.files[0]) {
+        const file = input.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('scan-preview-img').src = e.target.result;
+            document.getElementById('scan-preview-name').textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+            document.getElementById('scan-placeholder').style.display = 'none';
+            document.getElementById('scan-preview').style.display = 'block';
+            document.getElementById('scan-submit-btn').disabled = false;
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+// Drag and drop support
+const dropzone = document.getElementById('scan-dropzone');
+if (dropzone) {
+    dropzone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('drag-over');
+    });
+    dropzone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('drag-over');
+    });
+    dropzone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('drag-over');
+        const input = document.getElementById('scan-file-input');
+        input.files = e.dataTransfer.files;
+        handleScanPreview(input);
+    });
+}
+
+// Show loading state on submit
+document.getElementById('scan-form').addEventListener('submit', function() {
+    const btn = document.getElementById('scan-submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Scanning...';
+});
+</script>
+{% endblock %}

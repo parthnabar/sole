@@ -1,0 +1,12 @@
+{% if reminders %}
+    {% for r in reminders %}
+        {% include 'reminders/_reminder_item.html' %}
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-icon">🔔</div>
+        <h3>No reminders yet</h3>
+        <p>Create one or extract them from your notes</p>
+        <a href="{{ url_for('reminders.new_reminder') }}" class="btn btn-primary">+ New Reminder</a>
+    </div>
+{% endif %}

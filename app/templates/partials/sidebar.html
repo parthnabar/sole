@@ -1,0 +1,53 @@
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="sidebar-brand-icon">☀️</div>
+        <div class="sidebar-brand-text">
+            <h1>Sole</h1>
+            <p>Your personal assistant</p>
+        </div>
+    </div>
+
+    <div class="sidebar-section-label">WORKSPACE</div>
+    <ul class="sidebar-nav">
+        <li>
+            <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if request.endpoint == 'main.dashboard' else '' }}">
+                <span class="nav-icon">📊</span>
+                Dashboard
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('notes.list_notes') }}" class="{{ 'active' if request.blueprint == 'notes' else '' }}">
+                <span class="nav-icon">📄</span>
+                Notes
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('reminders.list_reminders') }}" class="{{ 'active' if request.blueprint == 'reminders' else '' }}">
+                <span class="nav-icon">🔔</span>
+                Reminders
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('documents.list_documents') }}" class="{{ 'active' if request.blueprint == 'documents' else '' }}">
+                <span class="nav-icon">📁</span>
+                Documents
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('email.inbox') }}" class="{{ 'active' if request.blueprint == 'email' else '' }}">
+                <span class="nav-icon">✉️</span>
+                Email
+            </a>
+        </li>
+        <li>
+            <a href="{{ url_for('summary.daily_summary') }}" class="{{ 'active' if request.blueprint == 'summary' else '' }}">
+                <span class="nav-icon">✨</span>
+                Daily Summary
+            </a>
+        </li>
+    </ul>
+
+    <div class="sidebar-footer">
+        <a href="https://www.anthropic.com" target="_blank">Powered by Claude</a>
+    </div>
+</aside>

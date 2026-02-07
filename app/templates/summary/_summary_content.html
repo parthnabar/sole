@@ -1,0 +1,13 @@
+<div>
+    <div class="flex items-center justify-between mb-4">
+        <div>
+            <span class="badge badge-pending">{{ summary.date.strftime('%B %d, %Y') }}</span>
+            <span class="text-xs text-muted" style="margin-left: 8px">
+                Generated {{ summary.generated_at.strftime('%I:%M %p') }}
+            </span>
+        </div>
+    </div>
+    <div class="summary-content">
+        {{ summary.content | markdown }}
+    </div>
+</div>

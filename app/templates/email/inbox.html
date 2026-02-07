@@ -1,0 +1,138 @@
+{% extends 'base.html' %}
+
+{% block title %}Email Summaries{% endblock %}
+
+{% block header %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-header-icon">✉️</div>
+        <div class="page-header-text">
+            <h2>Email Summaries</h2>
+            <p>AI-powered email triage — see what needs your attention</p>
+        </div>
+    </div>
+    <div class="page-header-right">
+        {% if is_connected %}
+        <form method="POST" action="{{ url_for('email.refresh_emails') }}"
+              hx-post="{{ url_for('email.refresh_emails') }}"
+              hx-target="#email-list"
+              hx-indicator="#refresh-spinner"
+              style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-secondary">
+                🔄 Refresh
+                <span id="refresh-spinner" class="htmx-indicator"><span class="spinner"></span></span>
+            </button>
+        </form>
+        <form method="POST" action="{{ url_for('email.disconnect_gmail') }}" style="display:inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-ghost btn-sm">Disconnect Gmail</button>
+        </form>
+        {% else %}
+        <a href="{{ url_for('email.connect_gmail') }}" class="btn btn-secondary">🔗 Connect Gmail</a>
+        {% endif %}
+        <button class="btn btn-primary" onclick="document.getElementById('paste-modal').style.display='flex'">
+            + Summarize Email
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    <!-- Filter Tabs -->
+    <div class="filter-tabs" id="email-filters">
+        <button class="filter-tab {% if current_filter == 'all' %}active{% endif %}"
+                hx-get="{{ url_for('email.filter_emails', filter='all') }}"
+                hx-target="#email-list"
+                onclick="setActiveFilter(this)">
+            All {% if all_count %}<span class="filter-count">{{ all_count }}</span>{% endif %}
+        </button>
+        <button class="filter-tab filter-tab-important {% if current_filter == 'important' %}active{% endif %}"
+                hx-get="{{ url_for('email.filter_emails', filter='important') }}"
+                hx-target="#email-list"
+                onclick="setActiveFilter(this)">
+            🔴 Important {% if important_count %}<span class="filter-count">{{ important_count }}</span>{% endif %}
+        </button>
+        <button class="filter-tab filter-tab-response {% if current_filter == 'needs_response' %}active{% endif %}"
+                hx-get="{{ url_for('email.filter_emails', filter='needs_response') }}"
+                hx-target="#email-list"
+                onclick="setActiveFilter(this)">
+            ↩️ Needs Reply {% if needs_response_count %}<span class="filter-count">{{ needs_response_count }}</span>{% endif %}
+        </button>
+        <button class="filter-tab {% if current_filter == 'high' %}active{% endif %}"
+                hx-get="{{ url_for('email.filter_emails', filter='high') }}"
+                hx-target="#email-list"
+                onclick="setActiveFilter(this)">
+            High
+        </button>
+        <button class="filter-tab {% if current_filter == 'medium' %}active{% endif %}"
+                hx-get="{{ url_for('email.filter_emails', filter='medium') }}"
+                hx-target="#email-list"
+                onclick="setActiveFilter(this)">
+            Medium
+        </button>
+        <button class="filter-tab {% if current_filter == 'low' %}active{% endif %}"
+                hx-get="{{ url_for('email.filter_emails', filter='low') }}"
+                hx-target="#email-list"
+                onclick="setActiveFilter(this)">
+            Low
+        </button>
+    </div>
+
+    <!-- Email List -->
+    <div id="email-list">
+        {% include 'email/_email_list.html' %}
+    </div>
+</div>
+
+<!-- Paste Email Modal -->
+<div id="paste-modal" class="modal-backdrop" style="display:none"
+     onclick="if(event.target===this)this.style.display='none'">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Summarize an Email</h3>
+            <button class="modal-close" onclick="document.getElementById('paste-modal').style.display='none'">&times;</button>
+        </div>
+        <form method="POST" action="{{ url_for('email.summarize_pasted') }}"
+              hx-post="{{ url_for('email.summarize_pasted') }}"
+              hx-target="#email-list"
+              hx-indicator="#paste-spinner">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="form-group">
+                <label class="form-label">From <span class="text-muted text-sm">(optional)</span></label>
+                <input type="text" name="sender" class="form-input" placeholder="sender@example.com">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Subject <span class="text-muted text-sm">(optional)</span></label>
+                <input type="text" name="subject" class="form-input" placeholder="Email subject line">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email Content</label>
+                <textarea name="body" class="form-textarea" rows="8"
+                          placeholder="Paste the email content here..." required></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary"
+                        onclick="document.getElementById('paste-modal').style.display='none'">
+                    ✨ Summarize
+                    <span id="paste-spinner" class="htmx-indicator"><span class="spinner"></span></span>
+                </button>
+                <button type="button" class="btn btn-secondary"
+                        onclick="document.getElementById('paste-modal').style.display='none'">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function setActiveFilter(el) {
+    document.querySelectorAll('#email-filters .filter-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+}
+</script>
+{% endblock %}

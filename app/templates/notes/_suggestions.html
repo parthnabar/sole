@@ -1,0 +1,38 @@
+<div class="suggestions-panel">
+    <h4>✨ AI-Detected Reminders</h4>
+    {% for s in suggestions %}
+    <div class="suggestion-item" id="suggestion-{{ loop.index }}">
+        <div class="suggestion-info">
+            <div class="suggestion-title">{{ s.title }}</div>
+            {% if s.description %}
+            <div class="text-sm text-muted">{{ s.description }}</div>
+            {% endif %}
+            <div class="suggestion-date">
+                {% if s.suggested_date %}
+                📅 {{ s.suggested_date }}
+                {% if s.suggested_time %} at {{ s.suggested_time }}{% endif %}
+                {% else %}
+                📅 No date detected
+                {% endif %}
+            </div>
+        </div>
+        <div class="suggestion-actions">
+            <form hx-post="{{ url_for('notes.accept_suggestion') }}"
+                  hx-target="#suggestion-{{ loop.index }}"
+                  hx-swap="outerHTML">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="title" value="{{ s.title }}">
+                <input type="hidden" name="description" value="{{ s.description or '' }}">
+                <input type="hidden" name="suggested_date" value="{{ s.suggested_date or '' }}">
+                <input type="hidden" name="suggested_time" value="{{ s.suggested_time or '' }}">
+                <input type="hidden" name="note_id" value="{{ note_id }}">
+                <button type="submit" class="btn btn-success btn-sm">Accept</button>
+            </form>
+            <button class="btn btn-ghost btn-sm"
+                    onclick="document.getElementById('suggestion-{{ loop.index }}').remove()">
+                Dismiss
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>

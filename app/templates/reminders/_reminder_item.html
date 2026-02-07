@@ -1,0 +1,40 @@
+<div class="reminder-item" id="reminder-{{ r.id }}">
+    <form hx-post="{{ url_for('reminders.toggle_complete', id=r.id) }}"
+          hx-target="#reminder-{{ r.id }}" hx-swap="outerHTML">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button type="submit"
+                class="reminder-checkbox {{ 'completed' if r.is_completed else '' }}"
+                title="{{ 'Mark incomplete' if r.is_completed else 'Mark complete' }}">
+            {{ '✓' if r.is_completed else '' }}
+        </button>
+    </form>
+    <div class="reminder-info">
+        <div class="reminder-title {{ 'completed' if r.is_completed else '' }}">
+            {{ r.title }}
+            {% if r.source == 'ai_suggested' %}
+            <span class="badge badge-ai">AI</span>
+            {% endif %}
+        </div>
+        {% if r.description %}
+        <div class="text-sm text-muted">{{ r.description | truncate_words(80) }}</div>
+        {% endif %}
+        <div class="reminder-due {{ 'overdue' if r.is_overdue and not r.is_completed else '' }}">
+            {% if r.is_completed %}
+                Completed
+            {% elif r.is_overdue %}
+                Overdue: {{ r.due_at.strftime('%b %d, %Y at %I:%M %p') }}
+            {% else %}
+                Due: {{ r.due_at.strftime('%b %d, %Y at %I:%M %p') }}
+            {% endif %}
+        </div>
+    </div>
+    <div class="reminder-actions">
+        <a href="{{ url_for('reminders.edit_reminder', id=r.id) }}" class="btn btn-ghost btn-sm">Edit</a>
+        <form hx-post="{{ url_for('reminders.delete_reminder', id=r.id) }}"
+              hx-target="#reminder-{{ r.id }}" hx-swap="outerHTML"
+              hx-confirm="Delete this reminder?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-ghost btn-sm text-danger">×</button>
+        </form>
+    </div>
+</div>

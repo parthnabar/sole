@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Documents{% endblock %}
+
+{% block header %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-header-icon">📁</div>
+        <div class="page-header-text">
+            <h2>Documents</h2>
+            <p>Upload and extract text from your files</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    <!-- Upload Zone -->
+    <form id="upload-form" method="POST" action="{{ url_for('documents.upload_document') }}"
+          enctype="multipart/form-data"
+          hx-post="{{ url_for('documents.upload_document') }}"
+          hx-target="#doc-list"
+          hx-swap="afterbegin"
+          hx-encoding="multipart/form-data"
+          hx-indicator="#upload-spinner">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <div class="upload-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+            <div class="upload-icon">📤</div>
+            <h3>Drop files here or click to upload</h3>
+            <p>Supports TXT, PDF, and DOCX files</p>
+            <input type="file" id="file-input" name="file" accept=".txt,.pdf,.docx"
+                   onchange="document.getElementById('upload-form').requestSubmit()">
+        </div>
+    </form>
+
+    <div id="upload-spinner" class="htmx-indicator loading-state mt-4">
+        <span class="spinner spinner-lg"></span>
+        <span>Processing document...</span>
+    </div>
+
+    <!-- Documents List -->
+    <div id="doc-list" class="mt-6">
+        {% if documents %}
+            {% for doc in documents %}
+                {% include 'documents/_document_card.html' %}
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📁</div>
+                <h3>No documents yet</h3>
+                <p>Upload a file to get started</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

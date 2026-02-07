@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block header %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-header-icon">📊</div>
+        <div class="page-header-text">
+            <h2>Dashboard</h2>
+        </div>
+    </div>
+    <div class="page-header-right">
+        {% include 'partials/notification_bell.html' %}
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    <!-- Greeting Banner -->
+    <div class="greeting-banner">
+        <span class="greeting-icon">☀️</span>
+        <div>
+            <h2>{{ greeting }}</h2>
+            <p>Here is what is happening in your workspace today</p>
+        </div>
+    </div>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <a href="{{ url_for('notes.list_notes') }}" class="stat-card" style="text-decoration:none">
+            <div class="stat-icon">📄</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ notes_count }}</div>
+                <div class="stat-label">thoughts captured</div>
+            </div>
+            <div class="stat-arrow">→</div>
+        </a>
+        <a href="{{ url_for('reminders.list_reminders') }}" class="stat-card" style="text-decoration:none">
+            <div class="stat-icon">🔔</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ pending_reminders }}</div>
+                <div class="stat-label">pending tasks</div>
+            </div>
+            <div class="stat-arrow">→</div>
+        </a>
+        <a href="{{ url_for('documents.list_documents') }}" class="stat-card" style="text-decoration:none">
+            <div class="stat-icon">📁</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ docs_count }}</div>
+                <div class="stat-label">files uploaded</div>
+            </div>
+            <div class="stat-arrow">→</div>
+        </a>
+        <a href="{{ url_for('summary.daily_summary') }}" class="stat-card" style="text-decoration:none">
+            <div class="stat-icon">✉️</div>
+            <div class="stat-info">
+                <div class="stat-number">{{ summaries_count }}</div>
+                <div class="stat-label">summaries saved</div>
+            </div>
+            <div class="stat-arrow">→</div>
+        </a>
+    </div>
+
+    <!-- Widget Grid -->
+    <div class="widget-grid">
+        <!-- Upcoming Reminders Widget -->
+        <div class="widget-card">
+            <div class="widget-header">
+                <div class="widget-header-left">
+                    <span class="widget-icon">🔔</span>
+                    <h3>Upcoming Reminders</h3>
+                </div>
+                <a href="{{ url_for('reminders.list_reminders') }}">View all</a>
+            </div>
+            <div class="widget-body">
+                {% if upcoming_reminders or overdue_reminders %}
+                    {% for r in overdue_reminders %}
+                    <div class="reminder-item">
+                        <form hx-post="{{ url_for('reminders.toggle_complete', id=r.id) }}"
+                              hx-target="closest .reminder-item" hx-swap="outerHTML">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="reminder-checkbox" title="Mark complete"></button>
+                        </form>
+                        <div class="reminder-info">
+                            <div class="reminder-title">{{ r.title }}</div>
+                            <div class="reminder-due overdue">Overdue: {{ r.due_at.strftime('%b %d, %I:%M %p') }}</div>
+                        </div>
+                        <span class="badge badge-overdue">overdue</span>
+                    </div>
+                    {% endfor %}
+                    {% for r in upcoming_reminders %}
+                    <div class="reminder-item">
+                        <form hx-post="{{ url_for('reminders.toggle_complete', id=r.id) }}"
+                              hx-target="closest .reminder-item" hx-swap="outerHTML">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="reminder-checkbox" title="Mark complete"></button>
+                        </form>
+                        <div class="reminder-info">
+                            <div class="reminder-title">{{ r.title }}</div>
+                            <div class="reminder-due">Due: {{ r.due_at.strftime('%b %d, %I:%M %p') }}</div>
+                        </div>
+                        <span class="badge badge-pending">pending</span>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="widget-empty">No upcoming reminders</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Notes Widget -->
+        <div class="widget-card">
+            <div class="widget-header">
+                <div class="widget-header-left">
+                    <span class="widget-icon">📄</span>
+                    <h3>Recent Notes</h3>
+                </div>
+                <a href="{{ url_for('notes.list_notes') }}">View all</a>
+            </div>
+            <div class="widget-body">
+                {% if recent_notes %}
+                    {% for note in recent_notes %}
+                    <a href="{{ url_for('notes.view_note', id=note.id) }}" class="list-card" style="text-decoration:none; color:inherit">
+                        <div style="flex:1">
+                            <div style="font-weight:600; font-size:0.9rem">{{ note.title }}</div>
+                            <div class="text-sm text-muted mt-2">{{ note.content | truncate_words(80) }}</div>
+                        </div>
+                        <div class="text-xs text-muted">{{ note.updated_at.strftime('%b %d') }}</div>
+                    </a>
+                    {% endfor %}
+                {% else %}
+                    <div class="widget-empty">No notes yet</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Tip Banner -->
+    <div class="tip-banner">
+        <div class="tip-icon">💡</div>
+        <div class="tip-text">
+            <h4>Tip: Extract reminders from notes</h4>
+            <p>Open any note and click "Extract Reminders" to let AI find tasks and deadlines automatically.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

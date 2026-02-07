@@ -1,0 +1,25 @@
+<div class="doc-item" id="doc-{{ doc.id }}">
+    <div class="doc-icon">
+        {% if doc.file_type == 'pdf' %}📕{% elif doc.file_type == 'docx' %}📘{% else %}📄{% endif %}
+    </div>
+    <div class="doc-info">
+        <a href="{{ url_for('documents.view_document', id=doc.id) }}" class="doc-name">{{ doc.original_name }}</a>
+        <div class="doc-meta">
+            <span>{{ doc.file_type.upper() }}</span>
+            <span>{{ doc.file_size_display }}</span>
+            <span>{{ doc.uploaded_at.strftime('%b %d, %Y') }}</span>
+        </div>
+        {% if doc.summary %}
+        <div class="doc-summary">{{ doc.summary | truncate_words(120) }}</div>
+        {% endif %}
+    </div>
+    <div class="card-actions">
+        <a href="{{ url_for('documents.view_document', id=doc.id) }}" class="btn btn-ghost btn-sm">View</a>
+        <form hx-post="{{ url_for('documents.delete_document', id=doc.id) }}"
+              hx-target="#doc-{{ doc.id }}" hx-swap="outerHTML"
+              hx-confirm="Delete this document?">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-ghost btn-sm text-danger">×</button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ doc.original_name }}{% endblock %}
+
+{% block header %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-header-icon">📁</div>
+        <div class="page-header-text">
+            <h2>{{ doc.original_name }}</h2>
+            <p>{{ doc.file_type.upper() }} · {{ doc.file_size_display }} · Uploaded {{ doc.uploaded_at.strftime('%b %d, %Y') }}</p>
+        </div>
+    </div>
+    <div class="page-header-right">
+        <form method="POST" action="{{ url_for('documents.delete_document', id=doc.id) }}"
+              style="display:inline" onsubmit="return confirm('Delete this document?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    {% if doc.summary %}
+    <div class="card mb-4">
+        <div class="card-header">
+            <div class="card-title">✨ AI Summary</div>
+        </div>
+        <div class="card-body mt-2">
+            {{ doc.summary }}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Q&A Section -->
+    <div class="qa-section mb-4">
+        <h4>🤖 Ask about this document</h4>
+        <form hx-post="{{ url_for('documents.analyze_doc', id=doc.id) }}"
+              hx-target="#qa-result"
+              hx-indicator="#qa-spinner">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="flex gap-2">
+                <input type="text" name="question" class="form-input" style="flex:1"
+                       placeholder="Ask a question about this document...">
+                <button type="submit" class="btn btn-primary">Ask</button>
+            </div>
+        </form>
+        <div id="qa-spinner" class="htmx-indicator loading-state">
+            <span class="spinner"></span>
+            <span class="text-sm">Analyzing...</span>
+        </div>
+        <div id="qa-result"></div>
+    </div>
+
+    <!-- Extracted Text -->
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">Extracted Text</div>
+        </div>
+        <div class="card-body mt-2">
+            {% if doc.extracted_text %}
+            <pre style="white-space: pre-wrap; font-family: var(--font-family); font-size: 0.88rem; line-height: 1.6; max-height: 500px; overflow-y: auto;">{{ doc.extracted_text }}</pre>
+            {% else %}
+            <p class="text-muted">No text could be extracted from this document.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('documents.list_documents') }}" class="btn btn-ghost">← Back to Documents</a>
+    </div>
+</div>
+{% endblock %}

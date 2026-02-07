@@ -1,0 +1,66 @@
+{% if emails %}
+<div class="card">
+    {% for email in emails %}
+    <div class="email-item {% if email.is_important %}email-important{% endif %} email-priority-{{ email.priority_label }}" id="email-{{ email.id }}">
+        <div class="email-header">
+            <div class="email-sender-row">
+                <div class="email-sender">{{ email.sender | truncate_words(40) }}</div>
+                <!-- Priority + Response badges -->
+                <div class="email-badges">
+                    {% if email.priority == 'high' %}
+                    <span class="badge badge-priority-high">High</span>
+                    {% elif email.priority == 'medium' %}
+                    <span class="badge badge-priority-medium">Medium</span>
+                    {% elif email.priority == 'low' %}
+                    <span class="badge badge-priority-low">Low</span>
+                    {% endif %}
+
+                    {% if email.needs_response %}
+                    <span class="badge badge-needs-response">Reply Needed</span>
+                    {% endif %}
+
+                    {% if email.category %}
+                    <span class="badge badge-category">{{ email.category | replace('_', ' ') | title }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="email-date">
+                    {% if email.received_at %}
+                    {{ email.received_at.strftime('%b %d, %Y %I:%M %p') }}
+                    {% else %}
+                    {{ email.fetched_at.strftime('%b %d, %Y') }}
+                    {% endif %}
+                </div>
+                <form hx-post="{{ url_for('email.delete_email', id=email.id) }}"
+                      hx-target="#email-{{ email.id }}" hx-swap="outerHTML"
+                      hx-confirm="Remove this email summary?">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-ghost btn-sm text-danger">×</button>
+                </form>
+            </div>
+        </div>
+        <div class="email-subject">{{ email.subject }}</div>
+
+        {% if email.triage_reason %}
+        <div class="email-triage-reason">
+            {% if email.needs_response %}↩️{% elif email.priority == 'high' %}🔴{% elif email.priority == 'medium' %}🟡{% else %}🟢{% endif %}
+            {{ email.triage_reason }}
+        </div>
+        {% endif %}
+
+        {% if email.summary %}
+        <div class="email-summary">{{ email.summary }}</div>
+        {% elif email.snippet %}
+        <div class="text-sm text-muted mt-2">{{ email.snippet | truncate_words(150) }}</div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-icon">✉️</div>
+    <h3>No emails found</h3>
+    <p>{% if current_filter and current_filter != 'all' %}No emails match this filter. Try "All" to see everything.{% else %}Paste an email or connect Gmail to get started.{% endif %}</p>
+</div>
+{% endif %}

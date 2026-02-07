@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+
+{% block title %}Reminders{% endblock %}
+
+{% block header %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-header-icon">🔔</div>
+        <div class="page-header-text">
+            <h2>Reminders</h2>
+            <p>{{ pending_count }} pending, {{ completed_count }} completed</p>
+        </div>
+    </div>
+    <div class="page-header-right">
+        <a href="{{ url_for('reminders.new_reminder') }}" class="btn btn-primary">+ New Reminder</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    <!-- Filter Tabs -->
+    <div class="filter-tabs">
+        <a href="{{ url_for('reminders.list_reminders', filter='all') }}"
+           class="filter-tab {{ 'active' if filter_status == 'all' else '' }}">All</a>
+        <a href="{{ url_for('reminders.list_reminders', filter='pending') }}"
+           class="filter-tab {{ 'active' if filter_status == 'pending' else '' }}">Pending</a>
+        <a href="{{ url_for('reminders.list_reminders', filter='completed') }}"
+           class="filter-tab {{ 'active' if filter_status == 'completed' else '' }}">Completed</a>
+    </div>
+
+    <!-- Reminders List -->
+    <div id="reminders-list" class="card">
+        {% include 'reminders/_list_items.html' %}
+    </div>
+</div>
+{% endblock %}

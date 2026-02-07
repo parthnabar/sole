@@ -1,0 +1,25 @@
+{% if notes %}
+    {% for note in notes %}
+    <a href="{{ url_for('notes.view_note', id=note.id) }}" class="note-item" style="text-decoration:none; display:block">
+        <div class="note-item-header">
+            <div class="note-item-title">
+                {{ note.title }}
+                {% if note.is_handwritten %}
+                <span class="badge badge-handwritten">📷 Handwritten</span>
+                {% endif %}
+            </div>
+            <div class="note-item-date">{{ note.updated_at.strftime('%b %d, %Y') }}</div>
+        </div>
+        <div class="note-item-preview">{{ note.content | truncate_words(150) }}</div>
+    </a>
+    {% endfor %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-icon">📄</div>
+        <h3>No notes yet</h3>
+        <p>Create your first note or scan a handwritten one</p>
+        <div class="flex items-center gap-2" style="justify-content: center">
+            <a href="{{ url_for('notes.new_note') }}" class="btn btn-primary">+ New Note</a>
+        </div>
+    </div>
+{% endif %}

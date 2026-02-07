@@ -1,0 +1,9 @@
+<div class="suggestion-item" style="background: var(--color-success-light); border: 1px solid #b7e4c7;">
+    <div class="suggestion-info">
+        <div class="suggestion-title">✓ {{ reminder.title }}</div>
+        <div class="suggestion-date text-success">
+            Reminder created for {{ reminder.due_at.strftime('%b %d, %Y at %I:%M %p') }}
+        </div>
+    </div>
+    <span class="badge badge-completed">Added</span>
+</div>

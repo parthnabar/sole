@@ -1,0 +1,9 @@
+<div class="notification-bell"
+     hx-get="{{ url_for('main.notifications') }}"
+     hx-trigger="every 60s"
+     hx-swap="outerHTML">
+    🔔
+    {% if notification_count > 0 %}
+    <span class="notification-badge">{{ notification_count }}</span>
+    {% endif %}
+</div>

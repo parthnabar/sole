@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ note.title }}{% endblock %}
+
+{% block header %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-header-icon">{% if note.is_handwritten %}📷{% else %}📄{% endif %}</div>
+        <div class="page-header-text">
+            <h2>{{ note.title }}
+                {% if note.is_handwritten %}
+                <span class="badge badge-handwritten">Handwritten</span>
+                {% endif %}
+            </h2>
+            <p>Last updated {{ note.updated_at.strftime('%b %d, %Y at %I:%M %p') }}</p>
+        </div>
+    </div>
+    <div class="page-header-right">
+        <button class="btn btn-secondary"
+                hx-post="{{ url_for('notes.extract_reminders', id=note.id) }}"
+                hx-target="#ai-suggestions"
+                hx-indicator="#extract-spinner">
+            ✨ Extract Reminders
+            <span id="extract-spinner" class="htmx-indicator"><span class="spinner"></span></span>
+        </button>
+        <a href="{{ url_for('notes.edit_note', id=note.id) }}" class="btn btn-primary">Edit</a>
+        <form method="POST" action="{{ url_for('notes.delete_note', id=note.id) }}"
+              style="display:inline"
+              onsubmit="return confirm('Delete this note?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    {% if note.is_handwritten and note.source_image %}
+    <!-- Original handwritten image -->
+    <div class="handwritten-source mb-4">
+        <div class="handwritten-source-header" onclick="toggleSourceImage()">
+            <h4>📷 Original Handwritten Note</h4>
+            <button class="btn btn-ghost btn-sm" id="toggle-image-btn">Show Image</button>
+        </div>
+        <div id="source-image-container" class="handwritten-source-image" style="display:none">
+            <img src="{{ url_for('notes.serve_note_image', filename=note.source_image) }}"
+                 alt="Original handwritten note">
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="note-content">
+        {{ note.content | markdown }}
+    </div>
+
+    <!-- AI Suggestions Area -->
+    <div id="ai-suggestions">
+        {% if reminders %}
+        <div class="suggestions-panel mt-4">
+            <h4>🔗 Linked Reminders</h4>
+            {% for r in reminders %}
+            <div class="suggestion-item">
+                <div class="suggestion-info">
+                    <div class="suggestion-title">{{ r.title }}</div>
+                    <div class="suggestion-date">
+                        Due: {{ r.due_at.strftime('%b %d, %Y at %I:%M %p') }}
+                        {% if r.is_completed %}
+                        <span class="badge badge-completed">completed</span>
+                        {% elif r.is_overdue %}
+                        <span class="badge badge-overdue">overdue</span>
+                        {% else %}
+                        <span class="badge badge-pending">pending</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('notes.list_notes') }}" class="btn btn-ghost">← Back to Notes</a>
+    </div>
+</div>
+
+<script>
+function toggleSourceImage() {
+    const container = document.getElementById('source-image-container');
+    const btn = document.getElementById('toggle-image-btn');
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        btn.textContent = 'Hide Image';
+    } else {
+        container.style.display = 'none';
+        btn.textContent = 'Show Image';
+    }
+}
+</script>
+{% endblock %}

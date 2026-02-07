@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+
+{% block title %}Summary - {{ summary.date.strftime('%b %d, %Y') }}{% endblock %}
+
+{% block header %}
+<div class="page-header">
+    <div class="page-header-left">
+        <div class="page-header-icon">✨</div>
+        <div class="page-header-text">
+            <h2>Daily Summary</h2>
+            <p>{{ summary.date.strftime('%B %d, %Y') }} · Generated {{ summary.generated_at.strftime('%I:%M %p') }}</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+    <div class="summary-content">
+        {{ summary.content | markdown }}
+    </div>
+
+    <div class="mt-4">
+        <a href="{{ url_for('summary.daily_summary') }}" class="btn btn-ghost">← Back to Daily Summary</a>
+    </div>
+</div>
+{% endblock %}
