@@ -23,3 +23,6 @@ python-docx==1.1.2
 
 # Markdown Rendering
 Markdown>=3.4
+
+# Production Server
+gunicorn==23.0.0

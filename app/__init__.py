@@ -2,7 +2,7 @@ import os
 import markdown
 from flask import Flask
 from markupsafe import Markup
-from app.config import DevelopmentConfig
+from app.config import DevelopmentConfig, ProductionConfig
 from app.extensions import db, scheduler, csrf, login_manager
 
 
@@ -12,7 +12,10 @@ def create_app(config_class=None):
                 template_folder='templates')
 
     if config_class is None:
-        config_class = DevelopmentConfig
+        if os.environ.get('FLASK_ENV') == 'production':
+            config_class = ProductionConfig
+        else:
+            config_class = DevelopmentConfig
     app.config.from_object(config_class)
 
     # Ensure directories exist
