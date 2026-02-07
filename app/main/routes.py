@@ -1,10 +1,12 @@
 from datetime import datetime, timedelta
 from flask import render_template
+from flask_login import login_required
 from app.main import bp
 from app.models import Note, Reminder, Document, EmailCache, DailySummary
 
 
 @bp.route('/')
+@login_required
 def dashboard():
     now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
@@ -52,5 +54,6 @@ def dashboard():
 
 
 @bp.route('/api/notifications')
+@login_required
 def notifications():
     return render_template('partials/notification_bell.html')

@@ -1,5 +1,12 @@
 from datetime import datetime, date
+from flask_login import UserMixin
 from app.extensions import db
+
+
+class User(UserMixin):
+    def __init__(self, id, username):
+        self.id = id
+        self.username = username
 
 
 class Note(db.Model):

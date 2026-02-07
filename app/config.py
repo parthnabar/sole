@@ -22,6 +22,9 @@ class Config:
 
     SCHEDULER_API_ENABLED = False
 
+    APP_USERNAME = os.environ.get('APP_USERNAME', 'admin')
+    APP_PASSWORD = os.environ.get('APP_PASSWORD', 'admin')
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

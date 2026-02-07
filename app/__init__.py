@@ -3,7 +3,7 @@ import markdown
 from flask import Flask
 from markupsafe import Markup
 from app.config import DevelopmentConfig
-from app.extensions import db, scheduler, csrf
+from app.extensions import db, scheduler, csrf, login_manager
 
 
 def create_app(config_class=None):
@@ -22,6 +22,15 @@ def create_app(config_class=None):
     # Initialize extensions
     db.init_app(app)
     csrf.init_app(app)
+    login_manager.init_app(app)
+
+    from app.models import User
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        if str(user_id) == '1':
+            return User(id=1, username=app.config['APP_USERNAME'])
+        return None
 
     # Register Jinja2 filters
     @app.template_filter('markdown')
@@ -54,6 +63,9 @@ def create_app(config_class=None):
         return {'notification_count': count}
 
     # Register blueprints
+    from app.auth import bp as auth_bp
+    app.register_blueprint(auth_bp)
+
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)
 
