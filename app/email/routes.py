@@ -180,7 +180,7 @@ def refresh_emails():
 
     try:
         service = get_gmail_service(token)
-        fetched = fetch_recent_emails(service, max_results=20)
+        fetched = fetch_recent_emails(service, max_results=5)
 
         new_count = 0
         for email_data in fetched:
@@ -215,6 +215,7 @@ def refresh_emails():
             _apply_triage(cached)
 
             db.session.add(cached)
+            db.session.commit()
             new_count += 1
 
         # Re-summarize any existing emails missing summaries
