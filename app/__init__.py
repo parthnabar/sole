@@ -1,7 +1,9 @@
 import os
+import logging
 import markdown
 from flask import Flask
 from markupsafe import Markup
+from werkzeug.middleware.proxy_fix import ProxyFix
 from app.config import DevelopmentConfig, ProductionConfig
 from app.extensions import db, scheduler, csrf, login_manager
 
@@ -17,6 +19,20 @@ def create_app(config_class=None):
         else:
             config_class = DevelopmentConfig
     app.config.from_object(config_class)
+
+    # Fix for reverse proxies (Render, Heroku, etc.) so Flask generates
+    # correct https:// URLs for OAuth callbacks and url_for(_external=True)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
+    # Configure logging so errors show in Render logs
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+    )
+    if not app.debug:
+        gunicorn_logger = logging.getLogger('gunicorn.error')
+        app.logger.handlers = gunicorn_logger.handlers
+        app.logger.setLevel(gunicorn_logger.level)
 
     # Ensure directories exist
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)

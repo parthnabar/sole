@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-from flask import render_template
+from flask import render_template, jsonify, current_app
 from flask_login import login_required
 from app.main import bp
-from app.models import Note, Reminder, Document, EmailCache, DailySummary
+from app.models import Note, Reminder, Document, EmailCache, DailySummary, OAuthToken
 
 
 @bp.route('/')
@@ -57,3 +57,30 @@ def dashboard():
 @login_required
 def notifications():
     return render_template('partials/notification_bell.html')
+
+
+@bp.route('/health')
+@login_required
+def health_check():
+    """Debug endpoint to verify configuration on Render."""
+    token = OAuthToken.query.filter_by(provider='google').first()
+    email_count = EmailCache.query.count()
+
+    return jsonify({
+        'status': 'ok',
+        'config': {
+            'anthropic_key_set': bool(current_app.config.get('ANTHROPIC_API_KEY')),
+            'anthropic_key_length': len(current_app.config.get('ANTHROPIC_API_KEY', '')),
+            'google_client_id_set': bool(current_app.config.get('GOOGLE_CLIENT_ID')),
+            'google_client_secret_set': bool(current_app.config.get('GOOGLE_CLIENT_SECRET')),
+            'claude_model': current_app.config.get('CLAUDE_MODEL', 'NOT SET'),
+        },
+        'oauth': {
+            'token_exists': token is not None,
+            'token_expiry': str(token.token_expiry) if token else None,
+            'has_refresh_token': bool(token.refresh_token) if token else False,
+        },
+        'data': {
+            'cached_emails': email_count,
+        }
+    })

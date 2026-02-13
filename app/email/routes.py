@@ -1,5 +1,6 @@
 import os
 import uuid
+import logging
 from datetime import datetime
 from flask import render_template, request, redirect, url_for, flash, current_app, session
 from app.email import bp
@@ -7,6 +8,8 @@ from app.extensions import db, csrf
 from app.models import EmailCache, OAuthToken
 from app.email.gmail_service import get_oauth_token, get_gmail_service, fetch_recent_emails
 from app import ai
+
+logger = logging.getLogger(__name__)
 
 # Allow HTTP for local development OAuth
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
@@ -27,8 +30,10 @@ def _apply_triage(email_obj):
             email_obj.category = triage.get('category', 'informational')
             email_obj.triage_reason = triage.get('reason', '')
             return True
-    except Exception:
-        pass
+        else:
+            logger.warning("Triage returned empty result for email: %s", email_obj.subject)
+    except Exception as e:
+        logger.error("Triage failed for email '%s': %s", email_obj.subject, str(e))
     return False
 
 
@@ -128,7 +133,12 @@ def oauth_callback():
             state=session.get('oauth_state')
         )
 
-        flow.fetch_token(authorization_response=request.url)
+        # Use request.url but ensure it's https in production
+        # (ProxyFix handles this, but as a safety net)
+        authorization_response = request.url
+        if request.headers.get('X-Forwarded-Proto') == 'https' and authorization_response.startswith('http://'):
+            authorization_response = authorization_response.replace('http://', 'https://', 1)
+        flow.fetch_token(authorization_response=authorization_response)
         creds = flow.credentials
 
         # Store or update token
@@ -150,9 +160,11 @@ def oauth_callback():
             db.session.add(token)
 
         db.session.commit()
+        logger.info("Gmail OAuth token stored successfully. Has refresh token: %s", bool(creds.refresh_token))
         flash('Gmail connected successfully!', 'success')
 
     except Exception as e:
+        logger.error("OAuth callback failed: %s", str(e), exc_info=True)
         flash(f'Failed to connect Gmail: {str(e)}', 'error')
 
     return redirect(url_for('email.inbox'))
@@ -175,12 +187,19 @@ def refresh_emails():
     """Fetch new emails from Gmail, summarize and triage them."""
     token = get_oauth_token()
     if not token:
+        logger.warning("Refresh attempted but no OAuth token found in DB")
         flash('Please connect Gmail first.', 'error')
         return redirect(url_for('email.inbox'))
 
     try:
+        logger.info("Starting email refresh. Token expiry: %s", token.token_expiry)
+        logger.info("ANTHROPIC_API_KEY set: %s", bool(current_app.config.get('ANTHROPIC_API_KEY')))
+
         service = get_gmail_service(token)
+        logger.info("Gmail service created successfully")
+
         fetched = fetch_recent_emails(service, max_results=5)
+        logger.info("Fetched %d email(s) from Gmail API", len(fetched))
 
         new_count = 0
         for email_data in fetched:
@@ -197,7 +216,9 @@ def refresh_emails():
                     email_data['sender'],
                     email_data['body_text'] or email_data['snippet']
                 )
-            except Exception:
+                logger.info("Summarized email: %s", email_data['subject'][:50])
+            except Exception as e:
+                logger.error("Summary failed for '%s': %s", email_data['subject'][:50], str(e))
                 summary = None
 
             cached = EmailCache(
@@ -218,6 +239,8 @@ def refresh_emails():
             db.session.commit()
             new_count += 1
 
+        logger.info("Saved %d new email(s) to cache", new_count)
+
         # Re-summarize any existing emails missing summaries
         unsummarized = EmailCache.query.filter(
             (EmailCache.summary == None) | (EmailCache.summary == '')
@@ -231,8 +254,8 @@ def refresh_emails():
                     email.body_text or email.snippet
                 )
                 resummarized += 1
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error("Re-summarize failed for '%s': %s", email.subject[:50], str(e))
 
         # Triage any existing emails that haven't been triaged
         untriaged = EmailCache.query.filter(EmailCache.priority == None).all()
@@ -256,6 +279,7 @@ def refresh_emails():
             flash('No new emails found.', 'info')
 
     except Exception as e:
+        logger.error("Email refresh failed: %s", str(e), exc_info=True)
         flash(f'Error fetching emails: {str(e)}', 'error')
 
     if request.headers.get('HX-Request'):

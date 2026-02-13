@@ -1,4 +1,5 @@
 import base64
+import logging
 from datetime import datetime
 from email.utils import parsedate_to_datetime
 from google.oauth2.credentials import Credentials
@@ -7,6 +8,8 @@ from googleapiclient.discovery import build
 from flask import current_app
 from app.extensions import db
 from app.models import OAuthToken
+
+logger = logging.getLogger(__name__)
 
 
 def get_oauth_token():
@@ -32,6 +35,7 @@ def refresh_token_if_needed(token: OAuthToken):
     creds = get_credentials(token)
 
     if creds.expired and creds.refresh_token:
+        logger.info("Access token expired, refreshing...")
         try:
             creds.refresh(Request())
             token.access_token = creds.token
@@ -39,8 +43,12 @@ def refresh_token_if_needed(token: OAuthToken):
             token.token_expiry = creds.expiry
             token.updated_at = datetime.utcnow()
             db.session.commit()
+            logger.info("Token refreshed successfully. New expiry: %s", creds.expiry)
         except Exception as e:
+            logger.error("Token refresh failed: %s", str(e))
             raise Exception(f"Failed to refresh token: {str(e)}")
+    else:
+        logger.info("Token still valid (expired=%s, has_refresh=%s)", creds.expired, bool(creds.refresh_token))
 
     return creds
 
