@@ -1,3 +1,9 @@
+databases:
+  - name: sole-db
+    plan: free
+    databaseName: sole
+    user: sole
+
 services:
   - type: web
     name: sole
@@ -7,6 +13,10 @@ services:
       mkdir -p instance uploads
     startCommand: gunicorn run:app --bind 0.0.0.0:$PORT --timeout 120 --workers 1
     envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sole-db
+          property: connectionString
       - key: SECRET_KEY
         generateValue: true
       - key: APP_USERNAME

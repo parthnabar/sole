@@ -6,7 +6,14 @@ instance_dir = os.path.join(os.path.dirname(basedir), 'instance')
 
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'dev-secret-key-change-me')
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(instance_dir, 'assistant.db')
+
+    # Use DATABASE_URL if set (Render PostgreSQL), otherwise fall back to local SQLite
+    _database_url = os.environ.get('DATABASE_URL', '')
+    # Render uses 'postgres://' but SQLAlchemy requires 'postgresql://'
+    if _database_url.startswith('postgres://'):
+        _database_url = _database_url.replace('postgres://', 'postgresql://', 1)
+    SQLALCHEMY_DATABASE_URI = _database_url or ('sqlite:///' + os.path.join(instance_dir, 'assistant.db'))
+
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
     ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY', '')

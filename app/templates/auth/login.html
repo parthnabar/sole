@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - Sole</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <style>
@@ -69,7 +71,7 @@
     <div class="login-page">
         <div class="login-card">
             <div class="login-brand">
-                <div class="login-brand-icon">☀️</div>
+                <div class="login-brand-icon"><img src="{{ url_for('static', filename='img/logo-192.png') }}" alt="Sole" style="width: 40px; height: 40px; border-radius: 8px;"></div>
                 <h1>Sole</h1>
                 <p>Sign in to your assistant</p>
             </div>
