@@ -1,47 +1,43 @@
 <aside class="sidebar">
     <div class="sidebar-brand">
-        <div class="sidebar-brand-icon"><img src="{{ url_for('static', filename='img/logo-192.png') }}" alt="Sole" style="width: 32px; height: 32px; border-radius: 6px;"></div>
-        <div class="sidebar-brand-text">
-            <h1>Sole</h1>
-            <p>Your personal assistant</p>
-        </div>
+        <img src="{{ url_for('static', filename='img/sole-brand.png') }}" alt="Sole" class="sidebar-brand-logo">
     </div>
 
     <div class="sidebar-section-label">WORKSPACE</div>
     <ul class="sidebar-nav">
         <li>
             <a href="{{ url_for('main.dashboard') }}" class="{{ 'active' if request.endpoint == 'main.dashboard' else '' }}">
-                <span class="nav-icon">📊</span>
+                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span>
                 Dashboard
             </a>
         </li>
         <li>
             <a href="{{ url_for('notes.list_notes') }}" class="{{ 'active' if request.blueprint == 'notes' else '' }}">
-                <span class="nav-icon">📄</span>
+                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></span>
                 Notes
             </a>
         </li>
         <li>
             <a href="{{ url_for('reminders.list_reminders') }}" class="{{ 'active' if request.blueprint == 'reminders' else '' }}">
-                <span class="nav-icon">🔔</span>
+                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></span>
                 Reminders
             </a>
         </li>
         <li>
             <a href="{{ url_for('documents.list_documents') }}" class="{{ 'active' if request.blueprint == 'documents' else '' }}">
-                <span class="nav-icon">📁</span>
+                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>
                 Documents
             </a>
         </li>
         <li>
             <a href="{{ url_for('email.inbox') }}" class="{{ 'active' if request.blueprint == 'email' else '' }}">
-                <span class="nav-icon">✉️</span>
+                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></span>
                 Email
             </a>
         </li>
         <li>
             <a href="{{ url_for('summary.daily_summary') }}" class="{{ 'active' if request.blueprint == 'summary' else '' }}">
-                <span class="nav-icon">✨</span>
+                <span class="nav-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.2L22 12l-7.6 2.8L12 22l-2.4-7.2L2 12l7.6-2.8L12 2z"/><path d="M20 4l.8 2.4L23 7.2l-2.2.8L20 10.4l-.8-2.4L17 7.2l2.2-.8L20 4z"/><path d="M4.5 16l.6 1.8 1.7.6-1.7.6-.6 1.8-.6-1.8L2.2 18.4l1.7-.6.6-1.8z"/></svg></span>
                 Daily Summary
             </a>
         </li>

@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from flask import render_template, jsonify, current_app
-from flask_login import login_required
+from flask_login import login_required, current_user
 from app.main import bp
 from app.models import Note, Reminder, Document, EmailCache, DailySummary, OAuthToken
 
@@ -33,7 +33,7 @@ def dashboard():
     # Recent notes
     recent_notes = Note.query.order_by(Note.updated_at.desc()).limit(5).all()
 
-    # Get greeting based on time of day
+    # Get greeting based on time of day, with user's name
     hour = datetime.now().hour
     if hour < 12:
         greeting = "Good morning"
@@ -41,6 +41,10 @@ def dashboard():
         greeting = "Good afternoon"
     else:
         greeting = "Good evening"
+
+    display_name = current_app.config.get('APP_DISPLAY_NAME', '') or current_user.username
+    if display_name:
+        greeting = f"{greeting}, {display_name}"
 
     return render_template('main/dashboard.html',
                            greeting=greeting,

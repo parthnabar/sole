@@ -19,7 +19,7 @@
         <h3>No notes yet</h3>
         <p>Create your first note or scan a handwritten one</p>
         <div class="flex items-center gap-2" style="justify-content: center">
-            <a href="{{ url_for('notes.new_note') }}" class="btn btn-primary">+ New Note</a>
+            <button class="btn btn-primary" onclick="openNewNoteModal()">+ New Note</button>
         </div>
     </div>
 {% endif %}

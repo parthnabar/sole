@@ -31,6 +31,7 @@ class Config:
 
     APP_USERNAME = os.environ.get('APP_USERNAME', 'admin')
     APP_PASSWORD = os.environ.get('APP_PASSWORD', 'admin')
+    APP_DISPLAY_NAME = os.environ.get('APP_DISPLAY_NAME', '')
 
 
 class DevelopmentConfig(Config):

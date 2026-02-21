@@ -5,7 +5,7 @@
 {% block header %}
 <div class="page-header">
     <div class="page-header-left">
-        <div class="page-header-icon">📊</div>
+        <div class="page-header-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
         <div class="page-header-text">
             <h2>Dashboard</h2>
         </div>
@@ -20,7 +20,6 @@
 <div class="page-body">
     <!-- Greeting Banner -->
     <div class="greeting-banner">
-        <span class="greeting-icon"><img src="{{ url_for('static', filename='img/logo-192.png') }}" alt="Sole" style="width: 36px; height: 36px; border-radius: 6px;"></span>
         <div>
             <h2>{{ greeting }}</h2>
             <p>Here is what is happening in your workspace today</p>
@@ -77,29 +76,47 @@
             <div class="widget-body">
                 {% if upcoming_reminders or overdue_reminders %}
                     {% for r in overdue_reminders %}
-                    <div class="reminder-item">
+                    <div class="reminder-item" id="reminder-{{ r.id }}">
                         <form hx-post="{{ url_for('reminders.toggle_complete', id=r.id) }}"
-                              hx-target="closest .reminder-item" hx-swap="outerHTML">
+                              hx-target="#reminder-{{ r.id }}" hx-swap="outerHTML">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="reminder-checkbox" title="Mark complete"></button>
                         </form>
-                        <div class="reminder-info">
+                        <div class="reminder-info reminder-clickable"
+                             data-id="{{ r.id }}"
+                             data-title="{{ r.title }}"
+                             data-description="{{ r.description or '' }}"
+                             data-date="{{ r.due_at.strftime('%Y-%m-%d') }}"
+                             data-time="{{ r.due_at.strftime('%H:%M') }}"
+                             onclick="openEditReminderFromEl(this)"
+                             style="cursor: pointer;">
                             <div class="reminder-title">{{ r.title }}</div>
-                            <div class="reminder-due overdue">Overdue: {{ r.due_at.strftime('%b %d, %I:%M %p') }}</div>
+                            <div class="reminder-due overdue">
+                                <span class="due-icon">🔴</span> Overdue: {{ r.due_at.strftime('%b %d, %Y at %I:%M %p') }}
+                            </div>
                         </div>
                         <span class="badge badge-overdue">overdue</span>
                     </div>
                     {% endfor %}
                     {% for r in upcoming_reminders %}
-                    <div class="reminder-item">
+                    <div class="reminder-item" id="reminder-{{ r.id }}">
                         <form hx-post="{{ url_for('reminders.toggle_complete', id=r.id) }}"
-                              hx-target="closest .reminder-item" hx-swap="outerHTML">
+                              hx-target="#reminder-{{ r.id }}" hx-swap="outerHTML">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                             <button type="submit" class="reminder-checkbox" title="Mark complete"></button>
                         </form>
-                        <div class="reminder-info">
+                        <div class="reminder-info reminder-clickable"
+                             data-id="{{ r.id }}"
+                             data-title="{{ r.title }}"
+                             data-description="{{ r.description or '' }}"
+                             data-date="{{ r.due_at.strftime('%Y-%m-%d') }}"
+                             data-time="{{ r.due_at.strftime('%H:%M') }}"
+                             onclick="openEditReminderFromEl(this)"
+                             style="cursor: pointer;">
                             <div class="reminder-title">{{ r.title }}</div>
-                            <div class="reminder-due">Due: {{ r.due_at.strftime('%b %d, %I:%M %p') }}</div>
+                            <div class="reminder-due">
+                                <span class="due-icon">📅</span> Due: {{ r.due_at.strftime('%b %d, %Y at %I:%M %p') }}
+                            </div>
                         </div>
                         <span class="badge badge-pending">pending</span>
                     </div>

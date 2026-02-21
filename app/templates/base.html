@@ -30,7 +30,157 @@
         </div>
     </div>
 
+    <!-- Edit Reminder Modal -->
+    <div id="edit-reminder-modal" class="modal-backdrop" style="display:none"
+         onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔔 Edit Reminder</h3>
+                <button class="modal-close" onclick="document.getElementById('edit-reminder-modal').style.display='none'">&times;</button>
+            </div>
+            <form id="edit-reminder-form" method="POST">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" id="edit-reminder-title" class="form-input"
+                           placeholder="Reminder title..." required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description <span class="text-muted text-sm">(optional)</span></label>
+                    <textarea name="description" id="edit-reminder-description" class="form-textarea" rows="3"
+                              placeholder="Add details..."></textarea>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" name="due_date" id="edit-reminder-date" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Due Time <span class="text-muted text-sm">(optional)</span></label>
+                        <input type="time" name="due_time" id="edit-reminder-time" class="form-input">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <button type="button" class="btn btn-secondary"
+                            onclick="document.getElementById('edit-reminder-modal').style.display='none'">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- New Reminder Modal -->
+    <div id="new-reminder-modal" class="modal-backdrop" style="display:none"
+         onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔔 New Reminder</h3>
+                <button class="modal-close" onclick="document.getElementById('new-reminder-modal').style.display='none'">&times;</button>
+            </div>
+            <form method="POST" action="{{ url_for('reminders.create_reminder') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" class="form-input"
+                           placeholder="Reminder title..." required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Description <span class="text-muted text-sm">(optional)</span></label>
+                    <textarea name="description" class="form-textarea" rows="3"
+                              placeholder="Add details..."></textarea>
+                </div>
+
+                <div class="grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Due Date</label>
+                        <input type="date" name="due_date" class="form-input" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Due Time <span class="text-muted text-sm">(optional)</span></label>
+                        <input type="time" name="due_time" class="form-input">
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Create Reminder</button>
+                    <button type="button" class="btn btn-secondary"
+                            onclick="document.getElementById('new-reminder-modal').style.display='none'">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- New Note Modal -->
+    <div id="new-note-modal" class="modal-backdrop" style="display:none"
+         onclick="if(event.target===this)this.style.display='none'">
+        <div class="modal-content" style="max-width: 640px;">
+            <div class="modal-header">
+                <h3>📄 New Note</h3>
+                <button class="modal-close" onclick="document.getElementById('new-note-modal').style.display='none'">&times;</button>
+            </div>
+            <form method="POST" action="{{ url_for('notes.create_note') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" class="form-input"
+                           placeholder="Note title..." required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Content <span class="text-muted text-sm">(Markdown supported)</span></label>
+                    <textarea name="content" class="form-textarea" rows="8"
+                              placeholder="Write your note here... You can use **bold**, *italic*, lists, and more."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Create Note</button>
+                    <button type="button" class="btn btn-secondary"
+                            onclick="document.getElementById('new-note-modal').style.display='none'">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+    function openEditReminderFromEl(el) {
+        var id = el.getAttribute('data-id');
+        var title = el.getAttribute('data-title');
+        var description = el.getAttribute('data-description');
+        var date = el.getAttribute('data-date');
+        var time = el.getAttribute('data-time');
+        document.getElementById('edit-reminder-title').value = title || '';
+        document.getElementById('edit-reminder-description').value = description || '';
+        document.getElementById('edit-reminder-date').value = date || '';
+        document.getElementById('edit-reminder-time').value = time || '';
+        document.getElementById('edit-reminder-form').action = '/reminders/' + id;
+        document.getElementById('edit-reminder-modal').style.display = 'flex';
+    }
+
+    function openNewReminderModal() {
+        document.getElementById('new-reminder-modal').style.display = 'flex';
+    }
+
+    function openNewNoteModal() {
+        document.getElementById('new-note-modal').style.display = 'flex';
+    }
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            document.querySelectorAll('.modal-backdrop').forEach(function(modal) {
+                modal.style.display = 'none';
+            });
+        }
+    });
+    </script>
     {% block scripts %}{% endblock %}
 </body>
 </html>
