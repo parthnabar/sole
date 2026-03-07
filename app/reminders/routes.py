@@ -46,6 +46,7 @@ def create_reminder():
     description = request.form.get('description', '').strip()
     due_date = request.form.get('due_date', '').strip()
     due_time = request.form.get('due_time', '').strip()
+    note_id = request.form.get('note_id', type=int)
 
     if not title:
         flash('Title is required.', 'error')
@@ -67,10 +68,15 @@ def create_reminder():
         title=title,
         description=description,
         due_at=due_at,
-        source='manual'
+        source='manual',
+        note_id=note_id
     )
     db.session.add(reminder)
     db.session.commit()
+
+    if note_id:
+        flash('Reminder created and linked to note!', 'success')
+        return redirect(url_for('notes.edit_note', id=note_id))
 
     flash('Reminder created!', 'success')
     return redirect(url_for('reminders.list_reminders'))

@@ -1,12 +1,39 @@
 import os
+import re
 import uuid
 from datetime import datetime
-from flask import render_template, request, redirect, url_for, flash, jsonify, current_app
+import bleach
+from flask import render_template, request, redirect, url_for, flash, jsonify, current_app, make_response
 from werkzeug.utils import secure_filename
 from app.notes import bp
 from app.extensions import db, csrf
 from app.models import Note, Reminder
 from app import ai
+
+ALLOWED_TAGS = ['p', 'br', 'strong', 'em', 'u', 's', 'h1', 'h2', 'h3',
+                'ul', 'ol', 'li', 'blockquote', 'pre', 'code', 'a', 'span']
+ALLOWED_ATTRIBUTES = {
+    'a': ['href', 'target', 'rel'],
+    'span': ['style', 'class'],
+}
+ALLOWED_CSS = ['color', 'background-color']
+
+
+def sanitize_html(html):
+    if not html:
+        return ''
+    from bleach.css_sanitizer import CSSSanitizer
+    css_sanitizer = CSSSanitizer(allowed_css_properties=ALLOWED_CSS)
+    return bleach.clean(html, tags=ALLOWED_TAGS,
+                       attributes=ALLOWED_ATTRIBUTES,
+                       css_sanitizer=css_sanitizer,
+                       strip=True)
+
+
+def strip_tags(html):
+    if not html:
+        return ''
+    return re.sub(r'<[^>]+>', '', html)
 
 
 def _allowed_image(filename):
@@ -35,7 +62,7 @@ def list_notes():
 
 @bp.route('/new')
 def new_note():
-    return render_template('notes/_form.html', note=None)
+    return render_template('notes/_form.html', note=None, reminders=[])
 
 
 @bp.route('/', methods=['POST'])
@@ -47,27 +74,24 @@ def create_note():
         flash('Title is required.', 'error')
         return redirect(url_for('notes.list_notes'))
 
-    note = Note(title=title, content=content)
+    note = Note(title=title, content=sanitize_html(content))
     db.session.add(note)
     db.session.commit()
 
     flash('Note created successfully!', 'success')
-    return redirect(url_for('notes.view_note', id=note.id))
+    return redirect(url_for('notes.edit_note', id=note.id))
 
 
 @bp.route('/<int:id>')
 def view_note(id):
-    note = Note.query.get_or_404(id)
-    reminders = Reminder.query.filter_by(note_id=note.id).all()
-    return render_template('notes/detail.html', note=note, reminders=reminders)
+    return redirect(url_for('notes.edit_note', id=id))
 
 
 @bp.route('/<int:id>/edit')
 def edit_note(id):
     note = Note.query.get_or_404(id)
-    if request.headers.get('HX-Request'):
-        return render_template('notes/_form.html', note=note)
-    return render_template('notes/_form.html', note=note)
+    reminders = Reminder.query.filter_by(note_id=note.id).all()
+    return render_template('notes/_form.html', note=note, reminders=reminders)
 
 
 @bp.route('/<int:id>', methods=['POST'])
@@ -81,12 +105,12 @@ def update_note(id):
         return redirect(url_for('notes.edit_note', id=note.id))
 
     note.title = title
-    note.content = content
+    note.content = sanitize_html(content)
     note.updated_at = datetime.utcnow()
     db.session.commit()
 
     flash('Note updated successfully!', 'success')
-    return redirect(url_for('notes.view_note', id=note.id))
+    return redirect(url_for('notes.edit_note', id=note.id))
 
 
 @bp.route('/<int:id>/delete', methods=['POST'])
@@ -172,7 +196,7 @@ def scan_handwritten():
     db.session.commit()
 
     flash('Handwritten note scanned and converted!', 'success')
-    return redirect(url_for('notes.view_note', id=note.id))
+    return redirect(url_for('notes.edit_note', id=note.id))
 
 
 @bp.route('/note-image/<filename>')
@@ -187,13 +211,13 @@ def serve_note_image(filename):
 def extract_reminders(id):
     note = Note.query.get_or_404(id)
 
-    suggestions = ai.extract_reminders_from_note(note.title, note.content)
+    suggestions = ai.extract_reminders_from_note(note.title, strip_tags(note.content))
 
     if not suggestions:
         if request.headers.get('HX-Request'):
             return '<div class="suggestions-panel"><p class="text-muted text-sm">No actionable items found in this note.</p></div>'
         flash('No actionable items found in this note.', 'info')
-        return redirect(url_for('notes.view_note', id=note.id))
+        return redirect(url_for('notes.edit_note', id=note.id))
 
     return render_template('notes/_suggestions.html',
                            suggestions=suggestions,
@@ -232,4 +256,13 @@ def accept_suggestion():
     db.session.add(reminder)
     db.session.commit()
 
-    return render_template('notes/_accepted_suggestion.html', reminder=reminder)
+    response = make_response(render_template('notes/_accepted_suggestion.html', reminder=reminder))
+    response.headers['HX-Trigger'] = 'refreshNoteReminders'
+    return response
+
+
+@bp.route('/<int:id>/reminders-list')
+def note_reminders_list(id):
+    note = Note.query.get_or_404(id)
+    reminders = Reminder.query.filter_by(note_id=note.id).all()
+    return render_template('notes/_note_reminders.html', reminders=reminders, note=note)

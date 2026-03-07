@@ -1673,6 +1673,85 @@ a:hover {
     box-shadow: var(--shadow-card);
 }
 
+/* --- Quill Rich Text Editor --- */
+.quill-editor-container {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-card-bg);
+}
+
+.quill-editor-container .ql-toolbar {
+    border: none;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-main-bg);
+    border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.quill-editor-container .ql-container {
+    border: none;
+    font-family: var(--font-family);
+    font-size: 0.9rem;
+    min-height: 250px;
+}
+
+.quill-editor-container .ql-editor {
+    min-height: 250px;
+    padding: 14px;
+    line-height: 1.7;
+}
+
+.quill-editor-container .ql-editor.ql-blank::before {
+    color: var(--color-text-muted);
+    font-style: normal;
+}
+
+.quill-editor-modal .ql-container {
+    min-height: 150px;
+}
+
+.quill-editor-modal .ql-editor {
+    min-height: 150px;
+}
+
+/* --- Note Inline Reminders --- */
+.note-inline-reminders {
+    border-top: 1px dashed var(--color-border);
+    margin-top: 8px;
+    padding-top: 12px;
+}
+
+.note-inline-reminders-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding: 0 2px;
+}
+
+.note-inline-reminders-label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    letter-spacing: 0.02em;
+}
+
+.note-inline-reminders .reminder-item {
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--color-main-bg);
+    margin-bottom: 6px;
+    padding: 8px 12px;
+}
+
+.note-inline-reminders .reminder-item:last-child {
+    margin-bottom: 0;
+}
+
+.note-inline-reminders-empty {
+    padding: 12px 0;
+    text-align: center;
+}
+
 /* --- Responsive --- */
 @media (max-width: 768px) {
     .sidebar {

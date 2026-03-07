@@ -103,6 +103,9 @@ def summarize_document(filename: str, text: str) -> str:
 
 def extract_reminders_from_note(title: str, content: str) -> list:
     """Extract actionable items from a note, return structured list."""
+    from datetime import datetime
+    today = datetime.now().strftime('%Y-%m-%d')
+    weekday = datetime.now().strftime('%A')
     try:
         client = get_client()
         message = client.messages.create(
@@ -117,6 +120,8 @@ def extract_reminders_from_note(title: str, content: str) -> list:
                     '- "description": more detail if available\n'
                     '- "suggested_date": ISO date string (YYYY-MM-DD) if a date is mentioned, or null\n'
                     '- "suggested_time": time in HH:MM format if mentioned, or null\n\n'
+                    f"Today's date is {today} ({weekday}). Resolve any relative dates "
+                    f"like 'tomorrow', 'next week', 'Friday', etc. into actual YYYY-MM-DD dates.\n\n"
                     "If there are no actionable items, return an empty array [].\n"
                     "Return ONLY the JSON array, no other text.\n\n"
                     f"Note Title: {title}\n\n"

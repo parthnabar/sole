@@ -69,7 +69,7 @@
             <div class="widget-header">
                 <div class="widget-header-left">
                     <span class="widget-icon">🔔</span>
-                    <h3>Upcoming Reminders</h3>
+                    <h3>Reminders This Week</h3>
                 </div>
                 <a href="{{ url_for('reminders.list_reminders') }}">View all</a>
             </div>
@@ -139,7 +139,7 @@
             <div class="widget-body">
                 {% if recent_notes %}
                     {% for note in recent_notes %}
-                    <a href="{{ url_for('notes.view_note', id=note.id) }}" class="list-card" style="text-decoration:none; color:inherit">
+                    <a href="{{ url_for('notes.edit_note', id=note.id) }}" class="list-card" style="text-decoration:none; color:inherit">
                         <div style="flex:1">
                             <div style="font-weight:600; font-size:0.9rem">{{ note.title }}</div>
                             <div class="text-sm text-muted mt-2">{{ note.content | truncate_words(80) }}</div>

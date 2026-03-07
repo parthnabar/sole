@@ -1,4 +1,5 @@
 import os
+import re
 import logging
 import markdown
 from flask import Flask
@@ -62,9 +63,11 @@ def create_app(config_class=None):
     def truncate_words_filter(text, length=100):
         if not text:
             return ''
-        if len(text) <= length:
-            return text
-        return text[:length].rsplit(' ', 1)[0] + '...'
+        # Strip HTML tags for clean preview text
+        clean = re.sub(r'<[^>]+>', '', text)
+        if len(clean) <= length:
+            return clean
+        return clean[:length].rsplit(' ', 1)[0] + '...'
 
     # Register context processor for notification count
     @app.context_processor

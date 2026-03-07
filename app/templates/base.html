@@ -7,6 +7,8 @@
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='img/favicon.ico') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='img/apple-touch-icon.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <meta name="htmx-config" content='{"defaultSwapStyle":"innerHTML"}'>
     <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -83,6 +85,7 @@
             </div>
             <form method="POST" action="{{ url_for('reminders.create_reminder') }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="note_id" id="new-reminder-note-id" value="">
 
                 <div class="form-group">
                     <label class="form-label">Title</label>
@@ -134,9 +137,9 @@
                 </div>
 
                 <div class="form-group">
-                    <label class="form-label">Content <span class="text-muted text-sm">(Markdown supported)</span></label>
-                    <textarea name="content" class="form-textarea" rows="8"
-                              placeholder="Write your note here... You can use **bold**, *italic*, lists, and more."></textarea>
+                    <label class="form-label">Content</label>
+                    <div id="modal-quill-editor" class="quill-editor-container quill-editor-modal"></div>
+                    <input type="hidden" name="content" id="modal-quill-content-hidden">
                 </div>
 
                 <div class="form-actions">
@@ -165,11 +168,36 @@
     }
 
     function openNewReminderModal() {
+        document.getElementById('new-reminder-note-id').value = '';
         document.getElementById('new-reminder-modal').style.display = 'flex';
     }
 
+    function openNoteReminderModal(noteId) {
+        document.getElementById('new-reminder-note-id').value = noteId;
+        document.getElementById('new-reminder-modal').style.display = 'flex';
+    }
+
+    var modalQuill;
     function openNewNoteModal() {
         document.getElementById('new-note-modal').style.display = 'flex';
+        if (!modalQuill) {
+            modalQuill = new Quill('#modal-quill-editor', {
+                theme: 'snow',
+                placeholder: 'Write your note here...',
+                modules: {
+                    toolbar: [
+                        [{ 'header': [1, 2, 3, false] }],
+                        ['bold', 'italic', 'underline', 'strike'],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                        ['clean']
+                    ]
+                }
+            });
+            document.querySelector('#new-note-modal form').addEventListener('submit', function() {
+                document.getElementById('modal-quill-content-hidden').value = modalQuill.root.innerHTML;
+            });
+        }
     }
 
     // Close modals with Escape key

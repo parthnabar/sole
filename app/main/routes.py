@@ -17,12 +17,12 @@ def dashboard():
     docs_count = Document.query.count()
     summaries_count = DailySummary.query.count()
 
-    # Upcoming reminders (next 24h, not completed)
+    # Upcoming reminders (next 7 days, not completed)
     upcoming_reminders = Reminder.query.filter(
-        Reminder.due_at <= now + timedelta(hours=24),
+        Reminder.due_at <= now + timedelta(days=7),
         Reminder.due_at >= now,
         Reminder.is_completed == False
-    ).order_by(Reminder.due_at.asc()).limit(5).all()
+    ).order_by(Reminder.due_at.asc()).limit(10).all()
 
     # Overdue reminders
     overdue_reminders = Reminder.query.filter(

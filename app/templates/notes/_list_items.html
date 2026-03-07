@@ -1,6 +1,6 @@
 {% if notes %}
     {% for note in notes %}
-    <a href="{{ url_for('notes.view_note', id=note.id) }}" class="note-item" style="text-decoration:none; display:block">
+    <a href="{{ url_for('notes.edit_note', id=note.id) }}" class="note-item" style="text-decoration:none; display:block">
         <div class="note-item-header">
             <div class="note-item-title">
                 {{ note.title }}

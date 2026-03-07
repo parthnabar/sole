@@ -5,19 +5,54 @@
 {% block header %}
 <div class="page-header">
     <div class="page-header-left">
-        <div class="page-header-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg></div>
+        <div class="page-header-icon">{% if note and note.is_handwritten %}<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>{% else %}<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg>{% endif %}</div>
         <div class="page-header-text">
-            <h2>{{ 'Edit Note' if note else 'New Note' }}</h2>
-            <p>{{ 'Update your note' if note else 'Capture a new thought' }}</p>
+            <h2>{{ note.title if note else 'New Note' }}
+                {% if note and note.is_handwritten %}
+                <span class="badge badge-handwritten">Handwritten</span>
+                {% endif %}
+            </h2>
+            <p>{% if note %}Last updated {{ note.updated_at.strftime('%b %d, %Y at %I:%M %p') }}{% else %}Capture a new thought{% endif %}</p>
         </div>
+    </div>
+    <div class="page-header-right">
+        {% if note %}
+        <button class="btn btn-secondary"
+                hx-post="{{ url_for('notes.extract_reminders', id=note.id) }}"
+                hx-target="#ai-suggestions"
+                hx-indicator="#extract-spinner">
+            ✨ Extract Reminders
+            <span id="extract-spinner" class="htmx-indicator"><span class="spinner"></span></span>
+        </button>
+        <form method="POST" action="{{ url_for('notes.delete_note', id=note.id) }}"
+              style="display:inline"
+              onsubmit="return confirm('Delete this note?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger">Delete</button>
+        </form>
+        {% endif %}
     </div>
 </div>
 {% endblock %}
 
 {% block content %}
 <div class="page-body">
-    <div class="card" style="max-width: 720px;">
-        <form method="POST"
+    {% if note and note.is_handwritten and note.source_image %}
+    <div class="handwritten-source mb-4">
+        <div class="handwritten-source-header" onclick="toggleSourceImage()">
+            <h4>Original Handwritten Note</h4>
+            <button class="btn btn-ghost btn-sm" id="toggle-image-btn">Show Image</button>
+        </div>
+        <div id="source-image-container" class="handwritten-source-image" style="display:none">
+            <img src="{{ url_for('notes.serve_note_image', filename=note.source_image) }}"
+                 alt="Original handwritten note">
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <!-- Note edit form (closes before reminders to avoid nested forms) -->
+        <form id="note-edit-form" method="POST"
               action="{{ url_for('notes.update_note', id=note.id) if note else url_for('notes.create_note') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
@@ -29,22 +64,96 @@
             </div>
 
             <div class="form-group">
-                <label class="form-label">Content <span class="text-muted text-sm">(Markdown supported)</span></label>
-                <textarea name="content" class="form-textarea" rows="12"
-                          placeholder="Write your note here... You can use **bold**, *italic*, lists, and more.">{{ note.content if note else '' }}</textarea>
+                <label class="form-label">Content</label>
+                <div id="quill-editor" class="quill-editor-container"></div>
+                <input type="hidden" name="content" id="quill-content-hidden">
             </div>
 
             <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
                     {{ 'Save Changes' if note else 'Create Note' }}
                 </button>
-                {% if note %}
-                <a href="{{ url_for('notes.view_note', id=note.id) }}" class="btn btn-secondary">Cancel</a>
-                {% else %}
-                <a href="{{ url_for('notes.list_notes') }}" class="btn btn-secondary">Cancel</a>
-                {% endif %}
+                <a href="{{ url_for('notes.list_notes') }}" class="btn btn-secondary">{{ 'Back to Notes' if note else 'Cancel' }}</a>
             </div>
         </form>
+
+        {% if note %}
+        <!-- Inline Reminders (inside the card but outside the form to avoid nested forms) -->
+        <div class="note-inline-reminders">
+            <div class="note-inline-reminders-header">
+                <span class="note-inline-reminders-label">🔔 Reminders</span>
+                <button type="button" class="btn btn-ghost btn-sm"
+                        onclick="openNoteReminderModal({{ note.id }})">
+                    + Add
+                </button>
+            </div>
+            <div id="note-reminders-list"
+                 hx-get="{{ url_for('notes.note_reminders_list', id=note.id) }}"
+                 hx-trigger="refreshNoteReminders from:body"
+                 hx-swap="innerHTML">
+                {% if reminders %}
+                    {% for r in reminders %}
+                    {% include 'reminders/_reminder_item.html' %}
+                    {% endfor %}
+                {% else %}
+                    <div class="note-inline-reminders-empty">
+                        <p class="text-muted text-sm">No reminders yet — add one or use Extract Reminders above.</p>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if note %}
+    <!-- AI Suggestions Area (appears when Extract Reminders is clicked) -->
+    <div id="ai-suggestions" class="mt-4"></div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{{ url_for('notes.list_notes') }}" class="btn btn-ghost">&larr; Back to Notes</a>
     </div>
 </div>
+
+<script>
+function toggleSourceImage() {
+    const container = document.getElementById('source-image-container');
+    const btn = document.getElementById('toggle-image-btn');
+    if (container.style.display === 'none') {
+        container.style.display = 'block';
+        btn.textContent = 'Hide Image';
+    } else {
+        container.style.display = 'none';
+        btn.textContent = 'Show Image';
+    }
+}
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+var quill = new Quill('#quill-editor', {
+    theme: 'snow',
+    placeholder: 'Write your note here...',
+    modules: {
+        toolbar: [
+            [{ 'header': [1, 2, 3, false] }],
+            ['bold', 'italic', 'underline', 'strike'],
+            [{ 'color': [] }, { 'background': [] }],
+            [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+            ['blockquote', 'code-block'],
+            ['link'],
+            ['clean']
+        ]
+    }
+});
+
+{% if note and note.content %}
+quill.root.innerHTML = {{ note.content | tojson }};
+{% endif %}
+
+document.getElementById('note-edit-form').addEventListener('submit', function() {
+    document.getElementById('quill-content-hidden').value = quill.root.innerHTML;
+});
+</script>
 {% endblock %}

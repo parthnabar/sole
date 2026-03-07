@@ -1,0 +1,9 @@
+{% if reminders %}
+    {% for r in reminders %}
+    {% include 'reminders/_reminder_item.html' %}
+    {% endfor %}
+{% else %}
+    <div class="note-inline-reminders-empty">
+        <p class="text-muted text-sm">No reminders yet — add one or use Extract Reminders above.</p>
+    </div>
+{% endif %}
