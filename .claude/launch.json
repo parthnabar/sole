@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "sole-dev",
+      "runtimeExecutable": "/Users/parthnabar/Desktop/Assistant/venv/bin/flask",
+      "runtimeArgs": ["run", "--port", "5050"],
+      "port": 5050
+    }
+  ]
+}

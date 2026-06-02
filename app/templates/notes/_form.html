@@ -149,7 +149,7 @@ var quill = new Quill('#quill-editor', {
 });
 
 {% if note and note.content %}
-quill.root.innerHTML = {{ note.content | tojson }};
+quill.root.innerHTML = {{ note.content | rich_content | tojson }};
 {% endif %}
 
 document.getElementById('note-edit-form').addEventListener('submit', function() {

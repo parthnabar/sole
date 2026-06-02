@@ -69,6 +69,28 @@ def create_app(config_class=None):
             return clean
         return clean[:length].rsplit(' ', 1)[0] + '...'
 
+    @app.template_filter('rich_content')
+    def rich_content_filter(text):
+        # Prepares note content for loading into the Quill editor. New notes are
+        # already HTML; legacy notes are plain text whose spacing/tabs/newlines
+        # would collapse when assigned to innerHTML, so convert them to
+        # whitespace-preserving HTML.
+        from markupsafe import escape
+        if not text:
+            return ''
+        if re.search(r'<(p|br|div|h[1-6]|ul|ol|li|span|strong|em|b|i|u|s|a|blockquote|pre|code)\b', text, re.IGNORECASE):
+            return text
+        lines = []
+        for line in text.split('\n'):
+            if line.strip() == '':
+                lines.append('<p><br></p>')
+                continue
+            escaped = str(escape(line))
+            escaped = escaped.replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;')
+            escaped = escaped.replace('  ', '&nbsp;&nbsp;')
+            lines.append('<p>' + escaped + '</p>')
+        return ''.join(lines)
+
     # Register context processor for notification count
     @app.context_processor
     def inject_notification_count():
